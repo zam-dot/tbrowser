@@ -1,4 +1,6 @@
-// config.go
+// Configuration management for TUI Browser.
+// Handles TOML config file loading, validation, and default values.
+// Manages user preferences for extraction, network, and UI settings.
 package main
 
 import (

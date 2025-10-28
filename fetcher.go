@@ -1,4 +1,6 @@
-// fetcher.go
+// HTTP client and content fetching operations.
+// Handles web content and RSS feeds with proper headers and compression.
+// Configurable timeouts and user agents with graceful error handling.
 package main
 
 import (

@@ -1,4 +1,7 @@
 // security/headers.go
+// Analyzes HTTP security headers for common misconfigurations.
+// Provides detailed reporting on missing, weak, or properly configured headers.
+// Used by the security scanner to assess web application security posture.
 package security
 
 import (
@@ -47,13 +50,18 @@ func AnalyzeSecurityHeaders(targetURL string, headers http.Header) *SecurityHead
 }
 
 func (s *SecurityHeaders) analyzeHSTS() {
+	// HSTS is critical for preventing SSL stripping attacks.
+	// We check for both presence and proper configuration:
+	// - Missing HSTS: high severity vulnerability
+	// - max-age=0: effectively disables HSTS (weak configuration)
+	// - preload: optimal security practice
 	value, exists := s.Headers["Strict-Transport-Security"]
 	if !exists {
 		s.SecurityFindings = append(s.SecurityFindings, SecurityFinding{
 			Header:      "Strict-Transport-Security",
 			Status:      "missing",
 			Description: "Forces HTTPS connections, prevents SSL stripping attacks",
-			Severity:    "high",
+			Severity:    "high", // Critical for security
 		})
 		return
 	}

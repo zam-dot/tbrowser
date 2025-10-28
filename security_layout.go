@@ -1,4 +1,7 @@
-// security_layout.go - Fixed version
+// SecurityLayout manages the dual-mode interface (Browser ↔ Security).
+// Dual-mode interface management (Browser ↔ Security Scanner).
+// Handles mode switching, focus management, and component coordination.
+// Provides F1/F2 keyboard shortcuts for seamless mode transitions.
 package main
 
 import (

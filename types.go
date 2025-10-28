@@ -1,4 +1,6 @@
-// types.go
+// Type definitions for TUI Browser data structures.
+// Contains all struct definitions for configuration, UI components, and business logic.
+// Centralized type definitions ensure consistency across the application.
 package main
 
 import (

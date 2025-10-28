@@ -1,4 +1,6 @@
-// navigation.go
+// URL resolution, history management, and link following.
+// Handles relative URL resolution and maintains navigation state.
+// Provides forward/backward navigation with bounds checking.
 package main
 
 import (

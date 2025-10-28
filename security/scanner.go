@@ -1,4 +1,6 @@
-// security/scanner.go - Add these methods
+// Security scanning HTTP client with header preservation.
+// Specialized fetcher for security analysis that retains response headers.
+// Used by vulnerability detection and technology fingerprinting components.
 package security
 
 import (

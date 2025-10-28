@@ -1,4 +1,6 @@
-// security/fingerprint.go
+// Technology stack fingerprinting and detection.
+// Identifies web servers, frameworks, JavaScript libraries, and third-party services.
+// Uses header analysis and HTML content patterns for accurate technology identification.
 package security
 
 import (

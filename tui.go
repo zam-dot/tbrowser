@@ -1,4 +1,6 @@
-// tui.go
+// Terminal UI component creation and focus management.
+// Pure UI construction without business logic - follows separation of concerns.
+// Handles component styling, layout, and focus indicators.
 package main
 
 import (

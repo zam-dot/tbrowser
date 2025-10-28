@@ -1,4 +1,6 @@
-// main.go
+// TUI Browser & Security Scanner - Entry point.
+// Initializes configuration, creates application instance, and launches the TUI.
+// Handles graceful shutdown and configuration loading errors.
 package main
 
 import (

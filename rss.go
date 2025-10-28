@@ -1,4 +1,6 @@
-// rss.go
+// RSS feed parsing and content extraction.
+// Converts RSS/XML feeds to formatted terminal text with CDATA support.
+// Extracts article titles, links, and descriptions with proper encoding handling.
 package main
 
 import (

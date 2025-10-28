@@ -1,4 +1,6 @@
-// handlers.go
+// UI event handlers and input processing.
+// Coordinates user actions with content fetching and display.
+// Supports multiple search engines and navigation commands.
 package main
 
 import (
@@ -29,7 +31,9 @@ func NewUIHandlersWithConfig(app *tview.Application, cfg *Config) *UIHandlers {
 	}
 }
 
-// handlers.go - Update HandleURLNavigation
+// HandleURLNavigation fetches and displays web content.
+// Runs asynchronously to keep UI responsive during network operations.
+// If addToHistory is true, adds URL to navigation history.
 func (h *UIHandlers) HandleURLNavigation(
 	url string,
 	content *tview.TextView,

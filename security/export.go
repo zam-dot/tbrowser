@@ -1,4 +1,6 @@
-// security/export.go
+// Security scan reporting and export functionality.
+// Generates comprehensive security reports in JSON and text formats.
+// Consolidates findings from all security analysis components into unified reports.
 package security
 
 import (

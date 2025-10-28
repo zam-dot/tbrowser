@@ -1,4 +1,6 @@
-// security/robots.go
+// Robots.txt analysis and crawler directive parsing.
+// Fetches and analyzes robots.txt files for security reconnaissance.
+// Identifies disallowed paths, sitemaps, and crawler access rules.
 package security
 
 import (
@@ -46,21 +48,25 @@ func ParseRobotsTxt(content string) *RobotsTxt {
 		RawContent: content,
 	}
 
-	lines := strings.Split(content, "\n")
-	for _, line := range lines {
+	for _, line := range strings.Split(content, "\n") {
 		line = strings.TrimSpace(line)
-		if strings.HasPrefix(line, "Disallow:") {
-			path := strings.TrimSpace(strings.TrimPrefix(line, "Disallow:"))
+		if line == "" {
+			continue
+		}
+
+		// Use CutPrefix with if-else chain (cleaner)
+		if path, found := strings.CutPrefix(line, "Disallow:"); found {
+			path = strings.TrimSpace(path)
 			if path != "" {
 				robots.DisallowedPaths = append(robots.DisallowedPaths, path)
 			}
-		} else if strings.HasPrefix(line, "Allow:") {
-			path := strings.TrimSpace(strings.TrimPrefix(line, "Allow:"))
+		} else if path, found := strings.CutPrefix(line, "Allow:"); found {
+			path = strings.TrimSpace(path)
 			if path != "" {
 				robots.AllowedPaths = append(robots.AllowedPaths, path)
 			}
-		} else if strings.HasPrefix(line, "Sitemap:") {
-			sitemap := strings.TrimSpace(strings.TrimPrefix(line, "Sitemap:"))
+		} else if sitemap, found := strings.CutPrefix(line, "Sitemap:"); found {
+			sitemap = strings.TrimSpace(sitemap)
 			if sitemap != "" {
 				robots.Sitemaps = append(robots.Sitemaps, sitemap)
 			}

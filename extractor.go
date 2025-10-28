@@ -1,4 +1,6 @@
-// extractor.go
+// HTML content extraction and text cleaning.
+// Converts HTML to readable terminal text with link preservation.
+// Applies site-specific cleaning rules and removes unwanted elements.
 package main
 
 import (

@@ -1,4 +1,6 @@
-// security/vulnerabilities.go
+// Web vulnerability detection and analysis.
+// Scans for common security issues: exposed admin panels, debug modes, CORS misconfigurations.
+// Provides severity ratings and remediation guidance for identified vulnerabilities.
 package security
 
 import (
@@ -61,6 +63,9 @@ func (s *VulnerabilityScan) checkExposedAdminPanels(targetURL string, html strin
 	}
 }
 
+// checkCORSMisconfig detects overly permissive CORS policies.
+// Wildcard (*) origins allow any website to make requests,
+// which can lead to data leakage in authenticated applications.
 func (s *VulnerabilityScan) checkCORSMisconfig(targetURL string, headers http.Header) {
 	acao := headers.Get("Access-Control-Allow-Origin")
 	if acao == "*" {
