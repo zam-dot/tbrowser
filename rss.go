@@ -20,7 +20,6 @@ func (r *RSSParser) ParseRSS(content string) (string, []string) {
 	var result strings.Builder
 	var links []string
 
-	// Use pre-compiled regex
 	items := rssItemRegex.FindAllStringSubmatch(content, -1)
 
 	for i, item := range items {
@@ -32,12 +31,16 @@ func (r *RSSParser) ParseRSS(content string) (string, []string) {
 		title := "No title"
 		if len(titleMatch) > 1 {
 			title = strings.TrimSpace(titleMatch[1])
+			// Clean CDATA from title if present
+			title = cleanCDATA(title)
 		}
 
 		linkMatch := rssLinkRegex.FindStringSubmatch(item[1])
 		link := ""
 		if len(linkMatch) > 1 {
 			link = strings.TrimSpace(linkMatch[1])
+			// Clean CDATA from link if present
+			link = cleanCDATA(link)
 		}
 
 		if link != "" {
@@ -49,9 +52,12 @@ func (r *RSSParser) ParseRSS(content string) (string, []string) {
 
 		descMatch := rssDescRegex.FindStringSubmatch(item[1])
 		if len(descMatch) > 1 {
-			// Use the pre-compiled htmlTagRegex
-			cleanDesc := htmlTagRegex.ReplaceAllString(descMatch[1], "")
-			description := strings.TrimSpace(cleanDesc)
+			description := strings.TrimSpace(descMatch[1])
+			// Clean CDATA from description if present
+			description = cleanCDATA(description)
+			// Then remove HTML tags
+			cleanDesc := htmlTagRegex.ReplaceAllString(description, "")
+			description = strings.TrimSpace(cleanDesc)
 			if description != "" && len(description) > 200 {
 				description = description[:200] + "..."
 			}
@@ -61,4 +67,12 @@ func (r *RSSParser) ParseRSS(content string) (string, []string) {
 	}
 
 	return result.String(), links
+}
+
+// Add this helper function to handle CDATA
+func cleanCDATA(text string) string {
+	// Remove CDATA wrappers if present
+	text = strings.TrimPrefix(text, "<![CDATA[")
+	text = strings.TrimSuffix(text, "]]>")
+	return strings.TrimSpace(text)
 }
