@@ -1,0 +1,103 @@
+[extraction]
+preserve_links = true
+add_line_breaks = true
+show_links_section = true
+max_blank_lines = 2
+
+[network]
+timeout_seconds = 10
+user_agent = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36"
+
+[ui]
+initial_message = """
+Welcome to tbrowser!
+
+[yellow]Navigation:[-]
+• Type URL or search with :d <query>
+• Numbers to follow links  
+• ←/→ for history, F1/F2 to switch modes
+• Ctrl+C to quit
+"""
+
+# Common website optimizations
+[site_overrides."github.com"]
+remove_elements = [
+  ".Header",
+  ".header",
+  "nav",
+  ".footer",
+  ".sidebar",
+  "[data-testid='dashboard']",
+  ".js-repo-nav"
+]
+description = "Clean GitHub reading experience"
+
+[site_overrides."reddit.com"]
+remove_elements = [
+  ".side",
+  ".footer",
+  ".promoted",
+  ".ad-container",
+  "[data-testid='subreddit-sidebar']",
+  ".reddit-video-player-host"
+]
+description = "Reddit without sidebar and ads"
+
+[site_overrides."twitter.com"]
+remove_elements = [
+  "[aria-label*='Trend']",
+  "[data-testid='sidebarColumn']",
+  "[aria-label='Timeline: Trending now']",
+  ".r-urgr8i",  # Sidebar container
+]
+description = "Twitter feed without trends and sidebar"
+
+[site_overrides."news.ycombinator.com"]
+remove_elements = []
+description = "HN is already clean!"
+
+[site_overrides."stackoverflow.com"]
+remove_elements = [
+  "#sidebar",
+  ".left-sidebar",
+  ".js-dismissable-hero",
+  ".s-topbar"
+]
+description = "Stack Overflow without sidebar"
+
+[site_overrides."medium.com"]
+remove_elements = [
+  ".postMeterBar",
+  ".meteredContent",
+  ".overlay",
+  "[data-test-id='paywall']"
+]
+description = "Medium without paywalls"
+
+[site_overrides."wikipedia.org"]
+remove_elements = ["#mw-navigation", "#footer", ".infobox", ".reference"]
+description = "Wikipedia without navigation and references"
+
+[site_overrides."archlinux.org"]
+remove_elements = ["#archnavbanner", ".footer", "#archnavbar", ".box"]
+description = "Clean Arch Linux docs"
+
+[site_overrides."docs.rs"]
+remove_elements = [".sidebar", ".rustdoc"]
+description = "Rust docs without sidebar"
+
+# Search engines (keep them clean)
+[site_overrides."lite.duckduckgo.com"]
+remove_elements = [".footer", ".header"]
+description = "Clean DuckDuckGo"
+
+[site_overrides."www.mojeek.com"]
+remove_elements = [".footer", "header"]
+description = "Clean Mojeek"
+
+# Common RSS feeds that work well
+[rss_feeds]
+hacker_news = "https://news.ycombinator.com/rss"
+lobsters = "https://lobste.rs/rss"
+go_blog = "https://blog.golang.org/feed.atom"
+rust_blog = "https://blog.rust-lang.org/feed.xml"
