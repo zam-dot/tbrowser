@@ -57,6 +57,15 @@ func (h *HistoryManager) Add(url string) {
 	}
 	h.history = append(h.history, url)
 	h.historyIndex = len(h.history) - 1
+
+	// Add history size limit (keep last 100 entries)
+	const maxHistory = 30
+	if len(h.history) > maxHistory {
+		// Remove oldest entries from the beginning
+		removeCount := len(h.history) - maxHistory
+		h.history = h.history[removeCount:]
+		h.historyIndex -= removeCount
+	}
 }
 
 func (h *HistoryManager) Back() (string, bool) {
