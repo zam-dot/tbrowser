@@ -6,6 +6,8 @@ package main
 import (
 	"fmt"
 	"net/url"
+	"os/exec"
+	"regexp"
 	"strconv"
 	"strings"
 
@@ -57,14 +59,18 @@ func (h *UIHandlers) HandleURLNavigation(
 			h.contentManager.SetCurrentLinks(links)
 
 			// Clean excessive blank lines before displaying
-			cleanedText := cleanBlankLines(cleanText, 2)
+			cleanedText := cleanBlankLines(cleanText, 1)
+
+			// Add text wrapping if max width is configured
+			if h.config.UI.MaxTextWidth > 0 {
+				cleanedText = wrapText(cleanedText, h.config.UI.MaxTextWidth)
+			}
 
 			status.SetText(fmt.Sprintf(" [green]Loaded:[-] %s ", finalURL))
 			content.SetText(fmt.Sprintf("[green]Content from:[-] %s\n[gray]%s[-]\n\n%s",
 				finalURL,
 				strings.Repeat("─", 50),
 				cleanedText))
-			content.ScrollToBeginning()
 		})
 	}()
 }
@@ -85,7 +91,25 @@ func (h *UIHandlers) HandleLinkFollow(
 		return
 	}
 
+	// Check if it's a magnet link
+	if strings.HasPrefix(url, "magnet:?") {
+		err := openMagnetLink(url)
+		if err != nil {
+			status.SetText(fmt.Sprintf(" [red]Error opening magnet link: %v[-] ", err))
+		} else {
+			status.SetText(" [green]Opening magnet link in torrent client...[-] ")
+		}
+		return // Don't navigate to magnet links as URLs
+	}
+
 	h.HandleURLNavigation(url, content, status, true)
+}
+
+func openMagnetLink(magnetURI string) error {
+	// This will open the system's default torrent client
+	return exec.Command("xdg-open", magnetURI).Start() // Linux
+	// For macOS: return exec.Command("open", magnetURI).Start()
+	// For Windows: return exec.Command("cmd", "/c", "start", magnetURI).Start()
 }
 
 func (h *UIHandlers) HandleBackNavigation(
@@ -189,6 +213,14 @@ func CreateInputHandler(
 			return
 		}
 
+		if strings.HasPrefix(text, ":t ") {
+			input.SetText("")
+			query := strings.TrimSpace(text[3:])
+			searchURL := "https://1337x.to/search/" + url.QueryEscape(query)
+			handlers.HandleURLNavigation(searchURL, content, status, true)
+			return
+		}
+
 		if strings.HasPrefix(text, ":g ") {
 			input.SetText("")
 			query := strings.TrimSpace(text[3:])
@@ -215,6 +247,70 @@ func CreateInputHandler(
 		normalizedURL := NormalizeURL(text)
 		handlers.HandleURLNavigation(normalizedURL, content, status, true)
 	}
+}
+
+func wrapText(text string, maxWidth int) string {
+	if maxWidth <= 0 {
+		return text
+	}
+
+	lines := strings.Split(text, "\n")
+	var result strings.Builder
+
+	for _, line := range lines {
+		// Check visible length (without color codes)
+		visibleLength := visibleLength(line)
+		if visibleLength <= maxWidth {
+			result.WriteString(line + "\n")
+			continue
+		}
+
+		// Word wrap considering color codes
+		result.WriteString(wrapLine(line, maxWidth) + "\n")
+	}
+
+	return strings.TrimSuffix(result.String(), "\n")
+}
+
+// Helper to calculate visible text length (ignoring color codes)
+func visibleLength(text string) int {
+	// Simple regex to remove color codes like [blue], [red], [-]
+	re := regexp.MustCompile(`\[[^\]]*\]`)
+	clean := re.ReplaceAllString(text, "")
+	return len(clean)
+}
+
+// Wrap a single line with color code preservation
+func wrapLine(line string, maxWidth int) string {
+	var result strings.Builder
+	words := strings.Fields(line)
+	currentLine := ""
+	currentVisibleLength := 0
+
+	for _, word := range words {
+		wordVisibleLength := visibleLength(word)
+
+		if currentVisibleLength+wordVisibleLength+1 > maxWidth {
+			if currentLine != "" {
+				result.WriteString(currentLine + "\n")
+			}
+			currentLine = word
+			currentVisibleLength = wordVisibleLength
+		} else {
+			if currentLine != "" {
+				currentLine += " "
+				currentVisibleLength++
+			}
+			currentLine += word
+			currentVisibleLength += wordVisibleLength
+		}
+	}
+
+	if currentLine != "" {
+		result.WriteString(currentLine)
+	}
+
+	return result.String()
 }
 
 func CreateInputCapture(

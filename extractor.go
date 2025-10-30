@@ -32,16 +32,18 @@ func (e *Extractor) getSiteConfig(rawURL string) *SiteConfig {
 		return nil
 	}
 
-	// Try exact host match first
-	if siteConfig, exists := e.config.SiteOverrides[parsed.Host]; exists {
+	host := parsed.Host
+
+	// Try exact match first
+	if siteConfig, exists := e.config.SiteOverrides[host]; exists {
 		return &siteConfig
 	}
 
-	// Try domain match (without subdomain)
-	domainParts := strings.Split(parsed.Host, ".")
+	// Skip wildcard logic for now - just do parent domain fallback
+	domainParts := strings.Split(host, ".")
 	if len(domainParts) >= 2 {
-		domain := strings.Join(domainParts[len(domainParts)-2:], ".")
-		if siteConfig, exists := e.config.SiteOverrides[domain]; exists {
+		parentDomain := strings.Join(domainParts[len(domainParts)-2:], ".")
+		if siteConfig, exists := e.config.SiteOverrides[parentDomain]; exists {
 			return &siteConfig
 		}
 	}
@@ -102,6 +104,11 @@ func (e *Extractor) Extract(html string, pageURL string) (string, []string) {
 	// Process content
 	doc.Find("h1, h2, h3, h4, h5, h6, p, a, td, li, code, pre").
 		Each(func(i int, s *goquery.Selection) {
+			// Skip <a> elements inside <li> (let the li handle them)
+			if goquery.NodeName(s) == "a" && s.Closest("li").Length() > 0 {
+				return
+			}
+
 			text := strings.TrimSpace(s.Text())
 			if text == "" {
 				return
@@ -110,22 +117,31 @@ func (e *Extractor) Extract(html string, pageURL string) (string, []string) {
 			tagName := goquery.NodeName(s)
 
 			switch tagName {
-			case "h1":
-				result.WriteString(fmt.Sprintf("\n\n[lightblue]%s[-]\n\n", text))
-			case "h2":
-				result.WriteString(fmt.Sprintf("\n\n[lightblue]%s[-]\n\n", text))
-			case "h3":
-				result.WriteString(fmt.Sprintf("\n\n[lightblue]%s[-]\n\n", text))
-			case "h4", "h5", "h6":
-				result.WriteString(fmt.Sprintf("\n\n[lightblue]%s[-]\n\n", text))
+			case "h1", "h2", "h3", "h4", "h5", "h6":
+				// Only process headings that are NOT inside lists
+				if s.Closest("li, ul, ol").Length() == 0 {
+					result.WriteString(fmt.Sprintf("\n\n[lightblue]%s[-]\n\n", text))
+				}
 			case "a":
 				href, exists := s.Attr("href")
 				if exists && href != "" {
-					linkCounter++
-					links = append(links, href)
-					result.WriteString(fmt.Sprintf("[blue][%d][-] %s ", linkCounter, text))
-				} else {
-					result.WriteString(fmt.Sprintf("[blue]%s[-] ", text))
+					if strings.HasPrefix(href, "magnet:") {
+						linkCounter++
+						links = append(links, href)
+						// Show shortened version
+						shortMagnet := href
+						if len(shortMagnet) > 60 {
+							shortMagnet = href[:60] + "..."
+						}
+						result.WriteString(
+							fmt.Sprintf("[purple][%d][-] %s\n", linkCounter, shortMagnet),
+						)
+					} else {
+						// Regular HTTP link
+						linkCounter++
+						links = append(links, href)
+						result.WriteString(fmt.Sprintf("[blue][%d][-] %s\n", linkCounter, text))
+					}
 				}
 			case "p":
 				result.WriteString(text + "\n\n")
@@ -133,7 +149,26 @@ func (e *Extractor) Extract(html string, pageURL string) (string, []string) {
 			case "code":
 				result.WriteString(fmt.Sprintf("[yellow]%s[-]\n\n", text))
 			case "li":
-				result.WriteString(fmt.Sprintf("\n\n•%s\n", text))
+				// Your existing li handling code here
+				text = strings.TrimSpace(s.Text())
+				text = whitespaceRegex.ReplaceAllString(text, " ")
+				text = ensureWordSpacing(text)
+
+				linksInLi := s.Find("a")
+				if linksInLi.Length() > 0 {
+					firstLink := linksInLi.First()
+					href, exists := firstLink.Attr("href")
+					if exists && href != "" {
+						linkCounter++
+						links = append(links, href)
+						result.WriteString(fmt.Sprintf("\n[blue][%d][-] %s \n", linkCounter, text))
+					} else {
+						result.WriteString(fmt.Sprintf("\n%s \n", text))
+					}
+				} else {
+					result.WriteString(fmt.Sprintf("\n%s \n", text))
+				}
+
 			}
 		})
 
@@ -151,4 +186,13 @@ func (e *Extractor) Extract(html string, pageURL string) (string, []string) {
 	}
 
 	return content, links
+}
+
+func ensureWordSpacing(text string) string {
+	// Add space between letter+letter when no space exists
+	return regexp.MustCompile(`([a-zA-ZåäöÅÄÖ])([A-ZÅÄÖ])`).ReplaceAllString(text, "${1} ${2}")
+}
+
+func isMagnetLink(href string) bool {
+	return strings.HasPrefix(href, "magnet:?")
 }

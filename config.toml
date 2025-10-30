@@ -18,6 +18,7 @@ Welcome to tbrowser!
 • ←/→ for history, F1/F2 to switch modes
 • Ctrl+C to quit
 """
+max_text_width = 80
 
 # Common website optimizations
 [site_overrides."github.com"]
@@ -94,6 +95,21 @@ description = "Clean DuckDuckGo"
 [site_overrides."www.mojeek.com"]
 remove_elements = [".footer", "header"]
 description = "Clean Mojeek"
+
+[site_overrides."go.dev"]
+remove_elements = [
+  "header",
+  "nav",
+  "aside",
+  ".Hero",
+  ".WhoUses",
+  ".TestimonialsGo",
+  ".Playground",
+  ".WhyGo",
+  "footer",
+  ".Cookie-notice",
+  ".WhyGo"
+]
 
 # Common RSS feeds that work well
 [rss_feeds]

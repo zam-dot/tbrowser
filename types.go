@@ -34,6 +34,7 @@ type NetworkConfig struct {
 
 type UIConfig struct {
 	InitialMessage string `toml:"initial_message"`
+	MaxTextWidth   int    `toml:"max_text_width"` // Add this
 }
 
 type LinkProcessor struct{}
