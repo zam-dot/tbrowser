@@ -179,6 +179,19 @@ func CreateInputHandler(
 			return
 		}
 
+		// In handlers.go - in CreateInputHandler()
+		if text == ":tor" {
+			input.SetText("")
+			err := handlers.fetcher.EnableTor(!handlers.fetcher.IsTorEnabled())
+			if err != nil {
+				status.SetText(fmt.Sprintf(" [red]Tor Error: %v[-] ", err))
+			} else {
+				UpdateTorIndicator(input, handlers.fetcher.IsTorEnabled())
+				status.SetText(fmt.Sprintf(" [yellow]Tor: %t[-] ", handlers.fetcher.IsTorEnabled()))
+			}
+			return
+		}
+
 		if strings.HasPrefix(text, ":d ") {
 			input.SetText("")
 			query := strings.TrimSpace(text[3:])
@@ -216,7 +229,7 @@ func CreateInputHandler(
 		if strings.HasPrefix(text, ":t ") {
 			input.SetText("")
 			query := strings.TrimSpace(text[3:])
-			searchURL := "https://1337x.to/search/" + url.QueryEscape(query)
+			searchURL := "https://www.limetorrents.fun/search/all/" + url.QueryEscape(query)
 			handlers.HandleURLNavigation(searchURL, content, status, true)
 			return
 		}
@@ -225,14 +238,6 @@ func CreateInputHandler(
 			input.SetText("")
 			query := strings.TrimSpace(text[3:])
 			searchURL := "https://gutenberg.org/ebooks/search/?query=" + url.QueryEscape(query)
-			handlers.HandleURLNavigation(searchURL, content, status, true)
-			return
-		}
-
-		if strings.HasPrefix(text, ":gh ") {
-			input.SetText("")
-			query := strings.TrimSpace(text[4:])
-			searchURL := "https://github.com/" + url.QueryEscape(query)
 			handlers.HandleURLNavigation(searchURL, content, status, true)
 			return
 		}

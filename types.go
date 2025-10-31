@@ -7,6 +7,7 @@ import (
 	"net/http"
 
 	"github.com/rivo/tview"
+	"golang.org/x/net/proxy"
 )
 
 // All your existing struct definitions go here...
@@ -19,6 +20,7 @@ type Config struct {
 
 type SiteConfig struct {
 	RemoveElements []string `toml:"remove_elements"`
+	LinkFormat     string   `toml:"link_format"` // Add this
 }
 
 type ExtractionConfig struct {
@@ -59,8 +61,10 @@ type ContentManager struct {
 }
 
 type Fetcher struct {
-	client *http.Client
-	config *Config
+	client    *http.Client
+	config    *Config
+	useTor    bool
+	torDialer proxy.Dialer
 }
 
 type RSSParser struct{}

@@ -5,12 +5,54 @@ package main
 
 import (
 	"compress/gzip"
+	"context"
 	"fmt"
 	"io"
+	"net"
 	"net/http"
 	"strings"
 	"time"
+
+	"github.com/rivo/tview"
+	"golang.org/x/net/proxy"
 )
+
+func (f *Fetcher) EnableTor(enable bool) error {
+	f.useTor = enable
+	if enable {
+		// Lazy-load the Tor dialer
+		dialer, err := proxy.SOCKS5("tcp", "127.0.0.1:9050", nil, proxy.Direct)
+		if err != nil {
+			return err
+		}
+		f.torDialer = dialer
+		f.client.Transport = &http.Transport{
+			// Use DialContext instead of Dial for .onion support
+			DialContext: func(ctx context.Context, network, addr string) (net.Conn, error) {
+				return dialer.Dial(network, addr)
+			},
+			// Optional: Add longer timeouts for Tor
+			ResponseHeaderTimeout: 30 * time.Second,
+		}
+	} else {
+		// Reset to default transport
+		f.client.Transport = &http.Transport{
+			ResponseHeaderTimeout: 10 * time.Second,
+		}
+	}
+	return nil
+}
+func (f *Fetcher) IsTorEnabled() bool {
+	return f.useTor
+}
+
+func UpdateTorIndicator(input *tview.InputField, isEnabled bool) {
+	if isEnabled {
+		input.SetLabel("🌐🧅 ") // Add onion icon
+	} else {
+		input.SetLabel("🌐 ") // Normal globe
+	}
+}
 
 func NewFetcher() *Fetcher {
 	return &Fetcher{

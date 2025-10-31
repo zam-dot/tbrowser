@@ -9,10 +9,19 @@ import (
 	"strings"
 )
 
-// URL Resolution
 func NormalizeURL(input string) string {
 	input = strings.TrimSpace(input)
 
+	// Handle .onion sites FIRST - force HTTP
+	if strings.Contains(input, ".onion") {
+		// Remove any existing protocol
+		input = strings.TrimPrefix(input, "https://")
+		input = strings.TrimPrefix(input, "http://")
+		// Force HTTP for .onion
+		return "http://" + input
+	}
+
+	// THEN handle regular URL normalization
 	if strings.HasPrefix(input, "http://") || strings.HasPrefix(input, "https://") {
 		return input
 	}

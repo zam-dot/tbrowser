@@ -101,8 +101,10 @@ func (e *Extractor) Extract(html string, pageURL string) (string, []string) {
 	var links []string
 	linkCounter := 0
 
+	var lastWasLink bool
+
 	// Process content
-	doc.Find("h1, h2, h3, h4, h5, h6, p, a, td, li, code, pre").
+	doc.Find("h1, h2, h3, h4, h5, h6, p, a, li, code, pre").
 		Each(func(i int, s *goquery.Selection) {
 			// Skip <a> elements inside <li> (let the li handle them)
 			if goquery.NodeName(s) == "a" && s.Closest("li").Length() > 0 {
@@ -116,6 +118,13 @@ func (e *Extractor) Extract(html string, pageURL string) (string, []string) {
 
 			tagName := goquery.NodeName(s)
 
+			// Check if we're transitioning from links to non-links
+			currentIsLink := tagName == "a"
+			if lastWasLink && !currentIsLink {
+				result.WriteString("\n\n") // Add newline after link group
+			}
+			lastWasLink = currentIsLink
+
 			switch tagName {
 			case "h1", "h2", "h3", "h4", "h5", "h6":
 				// Only process headings that are NOT inside lists
@@ -128,19 +137,23 @@ func (e *Extractor) Extract(html string, pageURL string) (string, []string) {
 					if strings.HasPrefix(href, "magnet:") {
 						linkCounter++
 						links = append(links, href)
-						// Show shortened version
 						shortMagnet := href
 						if len(shortMagnet) > 60 {
 							shortMagnet = href[:60] + "..."
 						}
-						result.WriteString(
-							fmt.Sprintf("[purple][%d][-] %s\n", linkCounter, shortMagnet),
-						)
+						linkText := fmt.Sprintf("[purple][%d][-] %s", linkCounter, shortMagnet)
+						wrappedText := wrapText(linkText, e.config.UI.MaxTextWidth) // ADD WRAPPING
+						result.WriteString(wrappedText + "\n")
 					} else {
-						// Regular HTTP link
 						linkCounter++
 						links = append(links, href)
-						result.WriteString(fmt.Sprintf("[blue][%d][-] %s\n", linkCounter, text))
+
+						siteConfig := e.getSiteConfig(pageURL)
+						if siteConfig != nil && siteConfig.LinkFormat == "inline" {
+							result.WriteString(fmt.Sprintf("[blue][%d][-] %s ", linkCounter, text))
+						} else {
+							result.WriteString(fmt.Sprintf("[blue][%d][-] %s \n", linkCounter, text)) // ← Remove \n here
+						}
 					}
 				}
 			case "p":
@@ -191,8 +204,4 @@ func (e *Extractor) Extract(html string, pageURL string) (string, []string) {
 func ensureWordSpacing(text string) string {
 	// Add space between letter+letter when no space exists
 	return regexp.MustCompile(`([a-zA-ZåäöÅÄÖ])([A-ZÅÄÖ])`).ReplaceAllString(text, "${1} ${2}")
-}
-
-func isMagnetLink(href string) bool {
-	return strings.HasPrefix(href, "magnet:?")
 }

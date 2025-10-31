@@ -28,7 +28,7 @@ func CreateUIComponents() (*tview.TextView, *tview.InputField, *tview.TextView, 
 
 	status := tview.NewTextView().
 		SetDynamicColors(true)
-	status.SetText(" Ready ")
+	status.SetText(" [gray]∘[-] Ready ") // ∘ = empty circle for Tor off
 	status.SetBackgroundColor(tcell.ColorDarkOliveGreen)
 
 	flex := tview.NewFlex().SetDirection(tview.FlexRow).
